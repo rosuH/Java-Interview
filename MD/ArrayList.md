@@ -4,6 +4,9 @@
 
 `ArrayList` 实现于 `List`、`RandomAccess` 接口。可以插入空数据，也支持随机访问。
 
+> 1. `ArrayList`使用无参数构造器时默认大小是 10
+> 2. `ArrayList`线程不安全
+
 `ArrayList `相当于动态数据，其中最重要的两个属性分别是:
 `elementData` 数组，以及 `size` 大小。
 在调用 `add()` 方法的时候：
@@ -57,13 +60,33 @@
 
 ### 序列化
 
-由于 ArrayList 是基于动态数组实现的，所以并不是所有的空间都被使用。因此使用了 `transient` 修饰，可以防止被自动序列化。
+由于`ArrayList `是基于动态数组实现的，所以并不是所有的空间都被使用。因此使用了 `transient` 修饰，可以防止被自动序列化。
+
+#### 为什么要使用序列化？
+
+> 1. 交流：两台运行同样代码的主机如果需要交流，那么使用序列化进行传输虽然不是最好的方法，但是确实可以工作
+> 2. 持久化：将对象转换为字节数组，然后保存到数据库中
+> 3. 深拷贝：如果你想获得一个对象的深拷贝，但是又不想重写`clone()`方法，那么序列化再反序列化是一个好方法
+> 4. 缓存：某些时候应用创建对象需要 10min 但是反序列化操作只需要 10s，那么将对象序列化后存入文件会比把这个巨大的对象保留在内存中好多了
+> 5. 跨 JVM 同步：序列化可以在运行着不同 JVM 的不同机器上使用
+>
+> -- [What is the purpose of Serialization in Java?](https://stackoverflow.com/questions/2232759/what-is-the-purpose-of-serialization-in-java) 
+
+> 在 Java 中，我们使用 `transient`来修饰不想被序列化的对象。同时遵循下面特点：
+>
+> - 一旦变量被`transient`修饰，变量将不再是对象持久化的一部分，该变量内容在序列化后无法获得访问
+> - `transient`关键字只能修饰变量，而不能修饰方法和类。静态变量是不能被`transient`关键字修饰的。变量如果是用户自定义类变量，则该类需要实现`Serializable`接口
+> - 被`transient`关键字修饰的变量不能被序列化，一个静态变量不管是否被其修饰，均不能被序列化
+>
+> -- [Java transient关键字使用小记](http://www.cnblogs.com/lanxuezaipiao/p/3369962.html)
+>
+> -- [Google 搜索：transient 修饰](https://www.google.com/search?q=transient%20修饰) 
 
 ```java
 transient Object[] elementData;
 ```
 
-因此 ArrayList 自定义了序列化与反序列化：
+因此 `ArrayList `自定义了序列化与反序列化：
 
 ```java
     private void writeObject(java.io.ObjectOutputStream s)
@@ -113,7 +136,6 @@ transient Object[] elementData;
 
 
 从实现中可以看出 ArrayList 只序列化了被使用的数据。
-
 
 ## Vector
 
