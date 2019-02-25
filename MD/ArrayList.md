@@ -2,14 +2,30 @@
 
 ## ArrayList
 
+### 要点提炼
+
+- 核心要点：自动扩容机制
+  - 无参构造器默认大小 10
+  - 添加元素前先进行扩容校验 --> 调用 `ensureCapaciyInternal(int minCapacity)`方法
+  - 先尝试扩展为原来的 1.5 倍，如果不满足需求，直接扩展为需求值
+  - 最后使用 `System.arrayCopy()` 复制到新数组
+- 线程不安全
+- 性能提示
+  - 按数组下标访问元素的性能很高
+  - 直接再数组末尾加入元素的性能也较高
+  - 按下标插入到指定位置、删除元素，则需要使用 `System.arrayCopy` 来移动部分受影响的元素，性能就变差
+- 值可以为空，因为元素被存入一个`Object[]`数组，并没有没有做校验
+
+### 解析
+
 `ArrayList` 实现于 `List`、`RandomAccess` 接口。可以插入空数据，也支持随机访问。
 
 > 1. `ArrayList`使用无参数构造器时默认大小是 10
 > 2. `ArrayList`线程不安全
 
-`ArrayList `相当于动态数据，其中最重要的两个属性分别是:
-`elementData` 数组，以及 `size` 大小。
+`ArrayList `相当于动态数据，其中最重要的两个属性分别是：`elementData` 数组，以及 `size` 大小。
 在调用 `add()` 方法的时候：
+
 ```java
     public boolean add(E e) {
         ensureCapacityInternal(size + 1);  // Increments modCount!!
@@ -58,11 +74,11 @@
 
 由此可见 `ArrayList` 的主要消耗是数组扩容以及在指定位置添加数据，在日常使用时最好是指定大小，尽量减少扩容。更要减少在指定位置插入数据的操作。
 
-### 序列化
+#### 序列化
 
 由于`ArrayList `是基于动态数组实现的，所以并不是所有的空间都被使用。因此使用了 `transient` 修饰，可以防止被自动序列化。
 
-#### 为什么要使用序列化？
+##### 为什么要使用序列化？
 
 > 1. 交流：两台运行同样代码的主机如果需要交流，那么使用序列化进行传输虽然不是最好的方法，但是确实可以工作
 > 2. 持久化：将对象转换为字节数组，然后保存到数据库中
@@ -168,6 +184,23 @@ transient Object[] elementData;
         elementCount++;
     }
 ```
+
+- `Vector`自带的方法都是线程安全的，因为使用了`synchronized`关键字修饰
+- 但是如果是复合方法，则需要客户端进行加锁
+
+```java
+public static Object getLast(Vector list) {
+    int lastIndex = list.size() - 1;
+    return list.get(lastIndex);
+}
+
+public static void deleteLast(Vector list) {
+    int lastIndex = list.size() - 1;
+    list.remove(lastIndex);
+}
+```
+
+线程 A 调用`getLast()`方法的同时，线程 B 调用`deleteLast()`方法，若是线程 B 先删除了最后一个元素，线程 A 就会发生数组越界异常。
 
 
 
